@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  name          String
+  currentRoomId String?
+  currentRoom   Room?      @relation(fields: [currentRoomId], references: [id])
+  roomHistory   RoomUser[]
+  upvotes       Upvote[]
+  createdAt     DateTime   @default(now())
+  Room          Room?      @relation(fields: [roomId], references: [id])
+  roomId        String?
+  Song          Song[]
+}
+
+model Room {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  adminId   String
+  admin     User       @relation(fields: [adminId], references: [id])
+  users     User[]     @relation("currentRoom")
+  songs     Song[]
+  createdAt DateTime   @default(now())
+  RoomUser  RoomUser[]
+}
+
+model RoomUser {
+  id       String   @id @default(uuid())
+  userId   String
+  roomId   String
+  user     User     @relation(fields: [userId], references: [id])
+  room     Room     @relation(fields: [roomId], references: [id])
+  joinedAt DateTime @default(now())
+
+  @@unique([userId, roomId])
+}
+
+model Song {
+  id        String    @id @default(uuid())
+  youtubeId String
+  title     String
+  thumbnail String
+  addedById String
+  addedBy   User      @relation(fields: [addedById], references: [id])
+  roomId    String
+  room      Room      @relation(fields: [roomId], references: [id])
+  upvotes   Upvote[]
+  playedAt  DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Upvote {
+  id        String   @id @default(uuid())
+  songId    String
+  song      Song     @relation(fields: [songId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([songId, userId])
+}
+
+z
