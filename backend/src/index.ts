@@ -1,8 +1,13 @@
 import express from "express";
 import { PORT } from "./config/serverConfig";
-
+import apiRoutes from "./routes/apiRoutes";
 const app = express();
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-})
+const setUpAndStartServer = () => {
+
+    app.use('/api', apiRoutes)
+
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    })
+}
