@@ -100,22 +100,22 @@ export function CreateRoomForm() {
   const canSubmit = allValidationsPassed && isAvailable && !isValidating;
 
   return (
-    <div className="bg-background/40 backdrop-blur-sm border border-primary/20 p-4 md:p-6 rounded-lg">
+    <div className="bg-background/40 backdrop-blur-sm border border-primary/20 p-6 rounded-lg sticky top-6">
       <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
         <Plus className="w-5 h-5" /> Create New Room
       </h2>
       
-      <form onSubmit={handleCreateRoom} className="space-y-4">
+      <form onSubmit={handleCreateRoom} className="space-y-5">
         <div className="relative">
           <input
             type="text"
             value={newRoomName}
             onChange={handleRoomNameChange}
             placeholder="Enter room name..."
-            className="w-full p-3 pr-12 bg-background/60 border border-primary/20 rounded-lg focus:border-primary/50 focus:outline-none transition-colors"
+            className="w-full p-4 pr-12 bg-background/60 border border-primary/20 rounded-lg focus:border-primary/50 focus:outline-none transition-colors text-base"
           />
           
-          <div className="absolute right-3 top-3">
+          <div className="absolute right-4 top-4">
             {isValidating ? (
               <div className="animate-spin h-5 w-5 border-2 border-primary rounded-full border-t-transparent" />
             ) : newRoomName && allValidationsPassed ? (
@@ -131,10 +131,10 @@ export function CreateRoomForm() {
         </div>
 
         {showValidations && (
-          <div className="space-y-2 p-3 bg-background/30 rounded-lg border border-primary/10">
-            <p className="text-sm font-medium text-gray-300 mb-2">Requirements:</p>
+          <div className="space-y-3 p-4 bg-background/30 rounded-lg border border-primary/10">
+            <p className="text-sm font-medium text-gray-300 mb-3">Requirements:</p>
             {validationRules.map((rule) => (
-              <div key={rule.id} className="flex items-center gap-2 text-sm">
+              <div key={rule.id} className="flex items-center gap-3 text-sm">
                 {rule.satisfied ? (
                   <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
                 ) : (
@@ -147,7 +147,7 @@ export function CreateRoomForm() {
             ))}
             
             {allValidationsPassed && (
-              <div className="flex items-center gap-2 text-sm pt-1 border-t border-primary/10">
+              <div className="flex items-center gap-3 text-sm pt-3 mt-3 border-t border-primary/10">
                 {isValidating ? (
                   <>
                     <div className="animate-spin h-4 w-4 border-2 border-primary rounded-full border-t-transparent flex-shrink-0" />
@@ -172,7 +172,7 @@ export function CreateRoomForm() {
         <button
           type="submit"
           disabled={!canSubmit}
-          className="w-full bg-primary hover:bg-primary/80 disabled:bg-gray-600 disabled:cursor-not-allowed py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors"
+          className="w-full bg-primary hover:bg-primary/80 disabled:bg-gray-600 disabled:cursor-not-allowed py-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors text-base"
         >
           Create Room <ArrowRight className="w-4 h-4" />
         </button>

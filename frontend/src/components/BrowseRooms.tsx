@@ -4,7 +4,7 @@ import { Search, Disc2, ArrowRight, Users, ChevronLeft, ChevronRight, Filter } f
 import { useStore } from '../store/useStore';
 import { useUser } from '@clerk/clerk-react';
 
-const ROOMS_PER_PAGE = 6;
+const ROOMS_PER_PAGE = 8;
 
 export function BrowseRooms() {
   const { rooms } = useStore();
@@ -64,21 +64,21 @@ export function BrowseRooms() {
   };
 
   return (
-    <div className="bg-background/40 backdrop-blur-sm border border-primary/20 p-4 md:p-6 rounded-lg">
+    <div className="bg-background/40 backdrop-blur-sm border border-primary/20 p-6 rounded-lg">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <h2 className="text-lg md:text-xl font-semibold flex items-center gap-2">
           <Users className="w-5 h-5" /> 
           Browse All Rooms ({allRooms.length})
         </h2>
         
-        <div className="flex flex-col sm:flex-row gap-2 sm:ml-auto">
+        <div className="flex flex-col sm:flex-row gap-3 sm:ml-auto">
           <div className="relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search rooms..."
-              className="w-full sm:w-64 p-2 pl-9 bg-background/60 border border-primary/20 rounded-lg focus:border-primary/50 focus:outline-none text-sm"
+              className="w-full sm:w-56 p-2 pl-9 bg-background/60 border border-primary/20 rounded-lg focus:border-primary/50 focus:outline-none text-sm"
             />
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
           </div>
@@ -98,27 +98,31 @@ export function BrowseRooms() {
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div>
         {paginatedRooms.length > 0 ? (
           <>
-            <div className="grid gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               {paginatedRooms.map((room) => (
                 <div
                   key={room.id}
                   onClick={() => navigate(`/room/${room.id}`)}
-                  className="flex items-center gap-3 p-4 bg-background/60 border border-primary/20 rounded-lg cursor-pointer hover:bg-primary/10 group transition-colors"
+                  className="bg-background/60 border border-primary/20 rounded-lg p-4 cursor-pointer hover:bg-primary/10 group transition-all hover:scale-[1.02]"
                 >
-                  <Disc2 className="w-6 h-6 text-primary flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium truncate">{room.name}</h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-400">
-                      <span>{room.queue?.length || 0} tracks in queue</span>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <Disc2 className="w-6 h-6 text-primary flex-shrink-0" />
+                      <h3 className="font-medium truncate">{room.name}</h3>
+                    </div>
+                    <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-400">
+                    <div className="flex items-center gap-4">
+                      <span>{room.queue?.length || 0} tracks</span>
                       {room.currentTrack && (
                         <span className="text-green-400">• Now playing</span>
                       )}
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                 </div>
               ))}
             </div>
@@ -128,7 +132,7 @@ export function BrowseRooms() {
                 <button
                   onClick={handlePrevPage}
                   disabled={currentPage === 1}
-                  className="flex items-center gap-1 px-3 py-2 text-sm bg-background/60 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 text-sm bg-background/60 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">Previous</span>
@@ -136,17 +140,17 @@ export function BrowseRooms() {
                 
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-400">
-                    Page {currentPage} of {totalPages}
+                    {currentPage} of {totalPages}
                   </span>
-                  <span className="hidden sm:inline text-xs text-gray-500">
-                    ({filteredAndSortedRooms.length} rooms)
+                  <span className="hidden md:inline text-xs text-gray-500">
+                    • {filteredAndSortedRooms.length} rooms
                   </span>
                 </div>
                 
                 <button
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
-                  className="flex items-center gap-1 px-3 py-2 text-sm bg-background/60 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 text-sm bg-background/60 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
                 >
                   <span className="hidden sm:inline">Next</span>
                   <ChevronRight className="w-4 h-4" />
