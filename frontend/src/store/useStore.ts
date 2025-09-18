@@ -21,8 +21,8 @@ export const useStore = create<Store>((set) => ({
     };
     set((state) => ({
       rooms: [...state.rooms, newRoom],
-      currentRoom: newRoom,
     }));
+    return newRoom;
   },
   joinRoom: (roomId) => {
     set((state) => ({
