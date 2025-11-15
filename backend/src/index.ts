@@ -1,13 +1,38 @@
 import express from "express";
 import { PORT } from "./config/serverConfig";
-import apiRoutes from "./routes/apiRoutes";
 const app = express();
+import authRoutes from './auth';
+import apiRoutes from "./api";
+import cors from "cors";
+import morgan from "morgan";
+import { clerkMiddleware } from "@clerk/express";
+import { logger } from "./utils/logger";
 
+// Morgan logs HTTP requests to Pino
+app.use(
+    morgan(
+        ":method :url :status :response-time ms - reqId=:req[id]",
+        {
+            stream: {
+                write: (msg) => logger.info(msg.trim()),
+            },
+        }
+    )
+);
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(clerkMiddleware())
+
+
+app.use('/auth', authRoutes)
+app.use('/api', apiRoutes)
 const setUpAndStartServer = () => {
-
-    app.use('/api', apiRoutes)
-
     app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
+        logger.info(`Server is running on port ${PORT}`);
     })
 }
+
+setUpAndStartServer();
