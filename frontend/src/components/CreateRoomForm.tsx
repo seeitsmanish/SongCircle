@@ -1,95 +1,143 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, ArrowRight, Check, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '@clerk/clerk-react';
-import { useStore } from '../store/useStore';
-import debounce from 'lodash.debounce';
+import { useAuth, useUser } from '@clerk/clerk-react';
+
+const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+interface ValidationRule {
+    id: string;
+    label: string;
+    test: (value: string) => boolean;
+
+}
 
 export function CreateRoomForm() {
     const { user, isSignedIn } = useUser();
-    const { createRoom } = useStore();
+    const { getToken } = useAuth();
     const navigate = useNavigate();
 
     const [newRoomName, setNewRoomName] = useState('');
-    const [isValidating, setIsValidating] = useState(false);
-    const [isValid, setIsValid] = useState<boolean | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // Simulate API call to check room name availability
-    const checkRoomAvailability = async (name: string) => {
-        // In a real app, this would be an API call
-        return new Promise<boolean>((resolve) => {
-            setTimeout(() => {
-                // Simple validation: room name should be 3-20 chars, alphanumeric with spaces
-                const isValid = /^[a-zA-Z0-9\s]{3,20}$/.test(name);
-                resolve(isValid);
-            }, 500);
-        });
-    };
+    const validationRules: ValidationRule[] = [
+        {
+            id: 'length',
+            label: 'Between 3-30 characters',
+            test: (value) => value.length >= 3 && value.length <= 30
+        },
+        {
+            id: 'alphanumeric',
+            label: 'Only letters, numbers, and hyphens(no trailing or leading or consecutive)',
+            test: (value) => /^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$/.test(value)
+        },
+        {
+            id: 'noSpaces',
+            label: 'No spaces allowed',
+            test: (value) => !value.includes(' ')
+        },
+    ];
 
-    const debouncedCheck = useCallback(
-        debounce(async (name: string) => {
-            if (!name) {
-                setIsValid(null);
-                setIsValidating(false);
-                return;
+    const validationResults = useMemo(() => {
+        return validationRules.map(rule => ({
+            ...rule,
+            satisfied: rule.test(newRoomName)
+        }));
+    }, [newRoomName]);
+
+    const allValidationsPassed = validationResults.every(rule => rule.satisfied);
+
+    const handleCreateRoom = async (e: React.FormEvent): Promise<void> => {
+        e.preventDefault();
+        if (!isSignedIn || !newRoomName.trim() || !allValidationsPassed || isSubmitting) return;
+
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            const token = await getToken();
+            const res = await fetch(`${VITE_BACKEND_URL}/api/create-room`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    name: newRoomName.trim(),
+                    userId: user.id
+                })
+            });
+
+            const response = await res.json();
+            if (!res.ok) {
+                throw new Error(response.error || 'Failed to create room');
             }
 
-            setIsValidating(true);
-            const valid = await checkRoomAvailability(name);
-            setIsValid(valid);
-            setIsValidating(false);
-        }, 500),
-        []
-    );
-
-    const handleRoomNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setNewRoomName(value);
-        debouncedCheck(value);
-    };
-
-    const handleCreateRoom = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!isSignedIn || !newRoomName.trim() || !isValid) return;
-
-        const room = createRoom(newRoomName, user.id);
-        setNewRoomName('');
-        setIsValid(null);
-        navigate(`/room/${room.id}`);
+            setNewRoomName('');
+            navigate(`/room/${response.roomId}`);
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to create room');
+            console.error('Error creating room:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
-        <div className="bg-background/40 backdrop-blur-sm border border-primary/20 p-6 rounded-lg mb-8">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <Plus className="w-5 h-5" /> Create Room
+        <div className="max-w-md mx-auto bg-background/40 backdrop-blur-sm border border-primary/20 p-6 rounded-lg">
+            <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
+                <Plus className="w-5 h-5" /> Create New Room
             </h2>
-            <form onSubmit={handleCreateRoom}>
-                <div className="relative">
+
+            <form onSubmit={handleCreateRoom} className="space-y-5">
+                <div>
                     <input
                         type="text"
                         value={newRoomName}
-                        onChange={handleRoomNameChange}
-                        placeholder="Enter room name (3-20 characters)"
-                        className="w-full p-3 pr-10 mb-4 bg-background/60 border border-primary/20 rounded focus:border-primary/50 focus:outline-none"
+                        onChange={(e) => setNewRoomName(e.target.value)}
+                        placeholder="Enter room name..."
+                        className="w-full p-4 bg-background/60 border border-primary/20 rounded-lg focus:border-primary/50 focus:outline-none transition-colors"
                     />
-                    {newRoomName && (
-                        <div className="absolute right-3 top-3">
-                            {isValidating ? (
-                                <div className="animate-spin h-5 w-5 border-2 border-primary rounded-full border-t-transparent" />
-                            ) : isValid ? (
-                                <Check className="w-5 h-5 text-green-500" />
-                            ) : (
-                                <X className="w-5 h-5 text-red-500" />
-                            )}
-                        </div>
-                    )}
                 </div>
+
+                <div className="space-y-2 p-4 bg-background/30 rounded-lg border border-primary/10">
+                    <p className="text-sm font-medium text-gray-300 mb-3">Room Name Requirements:</p>
+                    {validationResults.map((rule) => (
+                        <div key={rule.id} className="flex items-center gap-3 text-sm">
+                            {newRoomName ? (
+                                rule.satisfied ? (
+                                    <Check className="w-4 h-4 text-primary/50 flex-shrink-0" />
+                                ) : (
+                                    <X className="w-4 h-4 text-red-500 flex-shrink-0" />
+                                )
+                            ) : (
+                                <div className="w-4 h-4 rounded-full border border-gray-500 flex-shrink-0" />
+                            )}
+                            <span className={
+                                !newRoomName ? 'text-gray-400' :
+                                    rule.satisfied ? 'text-primary/80' : 'text-red-400'
+                            }>
+                                {rule.label}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+
+                {error && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                        {error}
+                    </div>
+                )}
+
                 <button
                     type="submit"
-                    disabled={!isValid || isValidating}
-                    className="w-full bg-primary hover:bg-primary/80 py-3 rounded-lg flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!allValidationsPassed || isSubmitting}
+                    className="w-full bg-primary hover:bg-primary/80 disabled:bg-gray-600 disabled:cursor-not-allowed py-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors"
                 >
-                    Create Room <ArrowRight className="w-4 h-4" />
+                    {isSubmitting ? 'Creating...' : (
+                        <>Create Room <ArrowRight className="w-4 h-4" /></>
+                    )}
                 </button>
             </form>
         </div>
