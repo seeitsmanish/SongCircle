@@ -3,9 +3,14 @@ import { useParams } from 'react-router-dom';
 import ReactPlayer from 'react-player/youtube';
 import { useStore } from '../store/useStore';
 import { Search, Play, SkipForward, Plus } from 'lucide-react';
+import LoadingAnimation from '../components/LoadingAnimation';
+import { withRoomName } from '../HOC/withRoomName';
 
-export function Room() {
-  const { id } = useParams();
+export type RoomProps = {
+  name: string;
+}
+
+const Room = ({ name }: RoomProps) => {
   const { rooms, currentRoom, joinRoom, addToQueue } = useStore();
   const [videoUrl, setVideoUrl] = React.useState('');
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -16,6 +21,7 @@ export function Room() {
     }
   }, [id, joinRoom]);
 
+
   const handleAddToQueue = (e: React.FormEvent) => {
     e.preventDefault();
     if (!videoUrl.trim()) return;
@@ -23,7 +29,7 @@ export function Room() {
     try {
       const url = new URL(videoUrl);
       const videoId = url.searchParams.get('v');
-      
+
       if (!videoId) {
         alert('Please enter a valid YouTube URL');
         return;
@@ -45,7 +51,7 @@ export function Room() {
   };
 
   if (!currentRoom) {
-    return <div>Room not found</div>;
+    return <LoadingAnimation />;
   }
 
   return (
@@ -54,7 +60,7 @@ export function Room() {
         <div className="lg:col-span-2">
           <div className="bg-background/40 backdrop-blur-sm border border-primary/20 p-6 rounded-lg mb-8">
             <h1 className="text-2xl font-bold mb-4">{currentRoom.name}</h1>
-            
+
             <form onSubmit={handleAddToQueue} className="mb-6">
               <div className="flex gap-2">
                 <input
@@ -120,3 +126,5 @@ export function Room() {
     </div>
   );
 }
+
+export default withRoomName(Room);
