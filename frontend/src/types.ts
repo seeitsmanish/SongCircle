@@ -1,3 +1,4 @@
+export const roomNameRegex = /^(?=.{3,30}$)[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$/;
 export interface Room {
   id: string;
   name: string;
