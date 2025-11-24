@@ -3,6 +3,7 @@ import { createRoomMiddleware } from "../middleware/roomMiddleware";
 import { getAuth, requireAuth } from "@clerk/express";
 import roomService from "../services/roomService";
 import { logger } from "../utils/logger";
+import { table } from "console";
 const router = Router();
 
 router.post("/create-room",

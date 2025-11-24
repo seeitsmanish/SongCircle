@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactHTMLElement } from "react";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom"
 import { roomNameRegex } from "../types";
 
@@ -6,7 +6,7 @@ export const withRoomNameProps = {
 
 }
 
-export const withRoomName = <T extends object>(WrappedComponent: React.ComponentType<T>) => {
+const withRoomName = <T extends object>(WrappedComponent: React.ComponentType<T>) => {
     return (props: T) => {
         const { name } = useParams;
         const navigate = useNavigate();
@@ -20,3 +20,5 @@ export const withRoomName = <T extends object>(WrappedComponent: React.Component
         )
     }
 }
+
+export default withRoomName;

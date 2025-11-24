@@ -7,6 +7,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { clerkMiddleware } from "@clerk/express";
 import { logger } from "./utils/logger";
+import { setUpWebSocketServer } from "./webSocketServer";
 
 // Morgan logs HTTP requests to Pino
 app.use(
@@ -29,10 +30,7 @@ app.use(clerkMiddleware())
 
 app.use('/auth', authRoutes)
 app.use('/api', apiRoutes)
-const setUpAndStartServer = () => {
-    app.listen(PORT, () => {
-        logger.info(`Server is running on port ${PORT}`);
-    })
-}
-
-setUpAndStartServer();
+const server = app.listen(PORT, () => {
+    logger.info(`Server is running on port ${PORT}`);
+})
+setUpWebSocketServer(server);

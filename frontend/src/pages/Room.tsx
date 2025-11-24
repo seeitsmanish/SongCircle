@@ -4,7 +4,7 @@ import ReactPlayer from 'react-player/youtube';
 import { useStore } from '../store/useStore';
 import { Search, Play, SkipForward, Plus } from 'lucide-react';
 import LoadingAnimation from '../components/LoadingAnimation';
-import { withRoomName } from '../HOC/withRoomName';
+import withRoomName from '../HOC/withRoomName';
 
 export type RoomProps = {
   name: string;
@@ -128,3 +128,4 @@ const Room = ({ name }: RoomProps) => {
 }
 
 export default withRoomName(Room);
+// jsx -> js, ts -> tsx

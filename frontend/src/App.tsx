@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Rooms } from './pages/Rooms';
-import { Room } from './pages/Room';
+import Room from './pages/Room';
 import { Navigation } from './components/Navigation';
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -19,7 +19,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/rooms" element={<Rooms />} />
-            <Route path="/room/:id" element={<Room />} />
+            <Route path="/room/:id" element={<Room name="" />} />
           </Routes>
         </main>
       </div>
