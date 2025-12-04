@@ -19,7 +19,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/rooms" element={<Rooms />} />
-            <Route path="/room/:id" element={<Room name="" />} />
+            <Route path="/room/:name" element={<Room />} />
           </Routes>
         </main>
       </div>

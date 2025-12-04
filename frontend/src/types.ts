@@ -15,3 +15,7 @@ export interface Track {
   thumbnail: string;
   url: string;
 }
+
+export enum WebSocketEventType {
+  JOIN_ROOM = 'JOIN_ROOM',
+}
