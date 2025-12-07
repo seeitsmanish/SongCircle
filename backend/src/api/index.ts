@@ -3,9 +3,10 @@ import { createRoomMiddleware } from "../middleware/roomMiddleware";
 import { getAuth, requireAuth } from "@clerk/express";
 import roomService from "../services/roomService";
 import { logger } from "../utils/logger";
-import { table } from "console";
+import { MediaService } from "../services/MediaService";
 const router = Router();
 
+// TODO:  Add Zod Validation here
 router.post("/create-room",
     requireAuth(),
     createRoomMiddleware,
@@ -31,6 +32,7 @@ router.post("/create-room",
 
 );
 
+// TODO:  Add Zod Validation here
 router.get("/rooms", requireAuth(), async (req, res) => {
     try {
         const { userId } = getAuth(req);
@@ -52,6 +54,27 @@ router.get("/rooms", requireAuth(), async (req, res) => {
         res.status(500).json({
             message: 'Our servers are having issues. Please try again later.'
         });
+    }
+})
+
+// TODO:  Add Zod Validation here
+router.get("/metadata", requireAuth(), async (req, res) => {
+    try {
+        const url = req.query.url as string;
+        if (!url) throw new Error('URL is required!');
+        const data = await MediaService.fetchMetaData(url);
+        res.status(200).json({
+            success: true,
+            message: 'Found your Music!',
+            data,
+        })
+    } catch (error) {
+        logger.error(`Something went wrong in route /metadata, ${error}`);
+        res.status(500).json({
+            success: false,
+            message: 'Something went wrong, Please try again later!',
+            data: null,
+        })
     }
 })
 

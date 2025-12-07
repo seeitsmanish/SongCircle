@@ -10,7 +10,6 @@ export const setUpWebSocketServer = (httpServer: Server) => {
     const wss = new WebSocketServer({ noServer: true });
 
     httpServer.on('upgrade', (request, socket, head) => {
-
         const { url } = request;
         const match = url?.match(/^\/ws\/room\/(.+)$/);
         if (match) {
@@ -55,8 +54,8 @@ export const setUpWebSocketServer = (httpServer: Server) => {
                     case WebSocketEventType.ADD_TO_QUEUE: {
                         // TODO: Validation
                         const userId = jsonData?.data?.userId;
-                        const url = jsonData?.data.url;
-                        const response = await roomService.addSongToQueue(roomName, userId, url);
+                        const track = jsonData?.data.track;
+                        const response = await roomService.addSongToQueue(roomName, userId, track);
                         socketInstance.send(JSON.stringify({
                             ...response,
                             event: WebSocketEventType.ADD_TO_QUEUE,
