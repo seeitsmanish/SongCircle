@@ -105,21 +105,22 @@ export const setUpWebSocketServer = (httpServer: Server) => {
                     }
                 }
             } catch (error) {
-                console.log(error);
+                logger.error(`Error while handling WebSocket message: ${error}`);
+                socketInstance.send(JSON.stringify({
+                    success: false,
+                    message: 'Something went wrong while processing your request',
+                    data: null,
+                }))
             }
         })
 
         socketInstance.on('close', async () => {
             try {
-                // await roomService.leaveRoom(roomName, socketInstance);
+                const userId = socketInstance.userId;
+                await roomService.leaveRoom(roomName, userId, socketInstance);
             } catch (error) {
-
+                logger.error(`Error while handling WebSocket close event: ${error}`);
             }
-        })
-
-        socketInstance.on('close', () => {
-            socketStore.leaveRoom(roomName, socketInstance);
-
         })
     })
 

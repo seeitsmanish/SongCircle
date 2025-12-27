@@ -2,7 +2,7 @@ import { PrismaClient, User } from "@prisma/client";
 import { redis } from "../config/redis";
 import prisma from "../lib/prisma";
 import { logger } from '../utils/logger';
-import { RoomQueue } from '../types';
+import { RoomQueue, WebSocketEventType } from '../types';
 import { socketStore } from "../store/socketStore";
 import { RoomWebSocket } from "../webSocketServer";
 
@@ -67,7 +67,7 @@ class RoomService {
     getKeys(roomName: string) {
         const key = `room:${roomName}`;
         const roomKey = `${key}:room`;
-        const metaKey = `${key}:meta"`;
+        const metaKey = `${key}:meta`;
         const queueKey = `${key}:queue`;
         const currentTrackKey = `${key}:currentTrack`;
 
@@ -123,9 +123,10 @@ class RoomService {
 
             // check if user exists and Add user to room in redis and socket store
             const isUserPresent = await redis.sismember(roomKey, userId);
-            if (!isUserPresent) {
+            logger.info(`isUserPresent value: ${isUserPresent} for userId: ${userId} in room: ${roomName}`);
+            if (isUserPresent === 0) {
+                await redis.sadd(roomKey, userId);
                 socketStore.joinRoom(roomName, ws);
-                await redis.sadd(roomKey, JSON.stringify(userId));
             }
 
             const isMetaExist = await redis.exists(metaKey);
@@ -142,9 +143,27 @@ class RoomService {
                 await redis.hset(metaKey, {
                     isAdminPresent: 'true'
                 });
+            } else {
+                ws.isAdmin = false;
             }
 
             const roomObject = await this.getRoomState(roomName);
+
+            if (ws.isAdmin) {
+                socketStore.broadcast(roomName, {
+                    success: true,
+                    message: 'Admin has joined the room',
+                    data: {
+                        name: roomObject?.roomName,
+                        currentTrack: roomObject?.currentTrack,
+                        queue: roomObject?.queue,
+                        isAdminPresent: roomObject?.meta?.isAdminPresent === 'true',
+                    },
+                    event: WebSocketEventType.ADMIN_JOIN
+                },
+                    [userId]
+                )
+            }
 
             return {
                 success: true,
@@ -167,34 +186,56 @@ class RoomService {
         }
     }
 
+    async cleanupRoom(roomName: string) {
+        try {
+            const { metaKey, queueKey, roomKey, currentTrackKey } = this.getKeys(roomName);
+            await redis.del(metaKey);
+            await redis.del(queueKey);
+            await redis.del(roomKey);
+            await redis.del(currentTrackKey);
+            socketStore.clearRoom(roomName);
+            logger.info(`Cleaned up room data for room: ${roomName}`);
+        } catch (error) {
+            logger.error(`Something went wrong in RoomService.cleanupRoom, ${error}`);
+            throw error;
+        }
+    }
+
     async leaveRoom(roomName: string, userId: string, ws: RoomWebSocket) {
         try {
+            logger.info(`User ${userId} is leaving room ${roomName}`);
+            const { metaKey, queueKey, roomKey, currentTrackKey } = this.getKeys(roomName);
+
+            // Remove user from socket store and redis room set
             socketStore.leaveRoom(roomName, ws);
-            const { metaKey, roomKey, currentTrackKey } = this.getKeys(roomName);
-            if (ws.isAdmin) {
-                // clear the admin meta data, current track, and song queue and make isAdminPresent false
+            await redis.srem(roomKey, userId);
+
+            logger.info(`ws.isAdmin value: ${ws.isAdmin}`);
+
+            const isRoomEmpty = await redis.scard(roomKey);
+            if (isRoomEmpty === 0) {
+                await this.cleanupRoom(roomName);
+            } else if (ws.isAdmin) {
+                // update isAdminPresent to false
+                logger.info(`Admin left the room ${roomName}`);
                 await redis.hset(metaKey, {
                     isAdminPresent: 'false',
                 });
                 await redis.del(currentTrackKey);
-                const { queueKey } = this.getKeys(roomName);
                 await redis.del(queueKey);
-            }
-            await redis.srem(roomKey, userId);
-
-            const roomState = await this.getRoomState(roomName);
-            if (roomState?.users.length === 0) {
-                // delete all keys related to this room
-                await redis.del(metaKey);
-                await redis.del(roomKey);
-                logger.info(`All users left the room ${roomName}, deleted room data from redis`);
-                return {};
-            }
-
-            return {
-                success: true,
-                message: 'Left the room successfully',
-                data: null,
+                // if admin left, broadcast to all users to inform admin has left
+                const roomState = await this.getRoomState(roomName);
+                socketStore.broadcast(roomName, {
+                    success: true,
+                    message: 'Admin has left the room',
+                    data: {
+                        name: roomState?.roomName,
+                        currentTrack: roomState?.currentTrack,
+                        queue: roomState?.queue,
+                        isAdminPresent: roomState?.meta?.isAdminPresent === 'true',
+                    },
+                    event: WebSocketEventType.ADMIN_LEAVE
+                })
             }
 
         } catch (error) {

@@ -8,4 +8,9 @@ redis.on('error', () => {
     logger.error('Connection to redis failed')
 })
 
+redis.on('connect', () => {
+    logger.info('Connected to redis successfully')
+    redis.flushdb();
+})
+
 export { redis };

@@ -22,31 +22,15 @@ export const useSocketConnection = (
         queue: [],
     })
     const { showSuccess, showError } = useSnackbar();
+    const [retryModalState, setRetryModalState] = useState<{
+        show: boolean,
+        loading: boolean,
+    }>({
+        show: false,
+        loading: false,
+    });
 
     useEffect(() => {
-
-        async function setUpWebSocket() {
-            const token = await getToken();
-            if (isSignedIn && !socketRef.current) {
-                socketRef.current = new WebSocket(`${url}?token=${token}`);
-                socketRef.current.onopen = () => {
-                    console.log('Socket connection created');
-                    setLoading(false);
-                }
-
-                socketRef.current.onmessage = (event) => {
-                    console.log('Message recieved', JSON.parse(event.data));
-                    const eventData = JSON.parse(event.data);
-                    handleMessageEvents(eventData);
-                }
-
-                socketRef.current.onerror = (error) => {
-                    console.log('Error while registering socket', error);
-                }
-            }
-
-        }
-
         setUpWebSocket();
         return () => {
             if (socketRef?.current) {
@@ -55,6 +39,51 @@ export const useSocketConnection = (
         }
     }, [isSignedIn])
 
+    async function setUpWebSocket() {
+        const token = await getToken();
+        if (isSignedIn && !socketRef.current) {
+            socketRef.current = new WebSocket(`${url}?token=${token}`);
+            socketRef.current.onopen = () => {
+                console.log('Socket connection created');
+                setLoading(false);
+            }
+
+            socketRef.current.onmessage = (event) => {
+                console.log('Message recieved', JSON.parse(event.data));
+                const eventData = JSON.parse(event.data);
+                handleMessageEvents(eventData);
+            }
+
+            socketRef.current.onerror = (error) => {
+                console.log('Error while registering socket', error);
+                setRetryModalState({
+                    show: true,
+                    loading: false,
+                })
+            }
+
+            socketRef.current.onclose = () => {
+                console.log('Socket connection closed');
+                setRetryModalState({
+                    show: true,
+                    loading: false,
+                })
+            }
+
+        }
+
+    }
+
+    const handleRetryConnection = async () => {
+        window.location.reload();
+    }
+
+    const closeRetryModal = () => {
+        setRetryModalState({
+            loading: false,
+            show: false,
+        })
+    }
 
     const handleMessageEvents = (event: WebSocketMessageType) => {
         setCurrentRoom((prev) => ({
@@ -77,6 +106,14 @@ export const useSocketConnection = (
                 showSuccess(event.message);
                 break;
             }
+
+            case WebSocketEventType.ADMIN_LEAVE: {
+                showSuccess(event.message);
+                break;
+            }
+
+            default:
+                showSuccess(event.message);
         }
     }
 
@@ -86,7 +123,7 @@ export const useSocketConnection = (
         )
     }
 
-    const joinRoom = () => {
+    function joinRoom() {
         try {
             if (isReadyState()) {
                 const joinRoomPayload = {
@@ -131,6 +168,7 @@ export const useSocketConnection = (
             showError('Error Playing Next Song in Queue!')
         }
     }
+
     return {
         videoUrl,
         setVideoUrl,
@@ -141,6 +179,9 @@ export const useSocketConnection = (
         joinRoom,
         addToQueue,
         playNextInQueue,
+        retryModalState,
+        closeRetryModal,
+        handleRetryConnection,
     }
 
 }

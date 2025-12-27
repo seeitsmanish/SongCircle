@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player/youtube';
-import { Loader2, Plus } from 'lucide-react';
+import { AlertTriangleIcon, Loader2, Plus } from 'lucide-react';
 import LoadingAnimation from '../components/LoadingAnimation';
 import { useSocketConnection } from '../hooks/useSocketConnection';
 import { useParams } from 'react-router-dom';
 import useSnackbar from '../hooks/useSnackbar';
 import { RequestBuilder } from '../shared/RequestBuilder';
+import Modal from '../components/Modal';
 const VITE_SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export type RoomProps = {
@@ -22,6 +23,9 @@ const Room = () => {
     joinRoom,
     addToQueue,
     playNextInQueue,
+    retryModalState,
+    closeRetryModal,
+    handleRetryConnection,
   } = useSocketConnection(`${VITE_SOCKET_URL}/ws/room/${name}`, name);
   const { showError } = useSnackbar();
   const [loadingAddToQueue, setLoadingAddToQueue] = useState(false);
@@ -64,6 +68,19 @@ const Room = () => {
 
   return (
     <div className="min-h-screen py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-6">
+      {
+        retryModalState.show && (
+          <Modal
+            title='Connection Lost'
+            message='The connection to the server was lost. Would you like to retry connecting to the room?'
+            onClose={closeRetryModal}
+            onSubmit={handleRetryConnection}
+            submitText={'Refresh'}
+            closeText='Cancel'
+            icon={<AlertTriangleIcon className='w-8 h-8 text-primary' />}
+          />
+        )
+      }
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           <div className="lg:col-span-2 space-y-4 sm:space-y-5 md:space-y-6">
@@ -119,12 +136,14 @@ const Room = () => {
                       }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-3">
-                          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5">
+                      <div className="text-center p-4">
+                        <div className="inline-flex items-center justify-center w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full mb-4 relative">
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/40 to-transparent opacity-0 animate-pulse"></div>
+                          <div className="relative w-5 h-5 border-3 border-primary/30 border-t-primary rounded-full animate-spin"></div>
                         </div>
-                        <p className="text-gray-400 font-medium">No track playing</p>
+                        <h3 className="text-lg sm:text-base font-bold text-white mb-2">No track playing</h3>
+                        <p className="text-xs md:text-sm text-gray-400 max-w-xs">Waiting for the next song in the queue to start</p>
                       </div>
                     </div>
                   )}
