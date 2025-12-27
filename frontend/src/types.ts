@@ -7,15 +7,33 @@ export interface Room {
   queue: Track[];
 }
 
-export interface Track {
+export enum WebSocketEventType {
+  JOIN_ROOM = 'JOIN_ROOM',
+  ADD_TO_QUEUE = 'ADD_TO_QUEUE',
+  PLAY_NEXT_IN_QUEUE = 'PLAY_NEXT_IN_QUEUE',
+}
+
+export type WebSocketMessageType = {
+  success: boolean;
+  message: string;
+  data: Record<string, any>;
+  event: WebSocketEventType;
+}
+
+export type Track = {
   id: string;
   title: string;
-  artist: string;
-  duration: number;
   thumbnail: string;
+  artist: string;
+  duration: string;
+  platform: string;
   url: string;
 }
 
-export enum WebSocketEventType {
-  JOIN_ROOM = 'JOIN_ROOM',
+export type RoomState = {
+  name: string;
+  currentTrack: Track | null;
+  isAdmin: boolean;
+  isAdminPresent: boolean;
+  queue: Track[]
 }

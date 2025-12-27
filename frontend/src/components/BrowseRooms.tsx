@@ -119,7 +119,7 @@ export function BrowseRooms() {
                             {rooms.map((room) => (
                                 <div
                                     key={room.name}
-                                    onClick={() => navigate(`/room?name=${room.name?.toLowerCase()}`)}
+                                    onClick={() => navigate(`/room/${room.name?.toLowerCase()}`)}
                                     className="flex items-center gap-3 p-4 bg-background/60 border border-primary/20 rounded-lg cursor-pointer hover:bg-primary/10 group transition-colors"
                                 >
                                     <Disc2 className="w-6 h-6 text-primary flex-shrink-0" />

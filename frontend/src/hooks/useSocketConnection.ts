@@ -1,40 +1,84 @@
 import { useEffect, useRef, useState } from "react"
-import { WebSocketEventType } from '../types';
+import { RoomState, Track, WebSocketEventType, WebSocketMessageType } from '../types';
 import { useAuth } from "@clerk/clerk-react";
+import useSnackbar from "./useSnackbar";
+
 
 
 export const useSocketConnection = (
     url: string,
+    name: string
 ) => {
 
     const [loading, setLoading] = useState(true);
     const socketRef = useRef<WebSocket | null>(null);
-    const { isSignedIn, userId, } = useAuth();
+    const { isSignedIn, userId, getToken } = useAuth();
+    const [videoUrl, setVideoUrl] = useState('');
+    const [currentRoom, setCurrentRoom] = useState<RoomState>({
+        name: name,
+        currentTrack: null,
+        isAdmin: false,
+        isAdminPresent: false,
+        queue: [],
+    })
+    const { showSuccess, showError } = useSnackbar();
 
     useEffect(() => {
-        if (isSignedIn && !socketRef.current) {
-            socketRef.current = new WebSocket(url);
 
-            socketRef.current.onopen = () => {
-                console.log('Socket connection created');
-                setLoading(false);
+        async function setUpWebSocket() {
+            const token = await getToken();
+            if (isSignedIn && !socketRef.current) {
+                socketRef.current = new WebSocket(`${url}?token=${token}`);
+                socketRef.current.onopen = () => {
+                    console.log('Socket connection created');
+                    setLoading(false);
+                }
+
+                socketRef.current.onmessage = (event) => {
+                    console.log('Message recieved', JSON.parse(event.data));
+                    const eventData = JSON.parse(event.data);
+                    handleMessageEvents(eventData);
+                }
+
+                socketRef.current.onerror = (error) => {
+                    console.log('Error while registering socket', error);
+                }
             }
 
-            socketRef.current.onmessage = (event) => {
-                console.log('Message recieved', JSON.parse(event.data));
-            }
-
-            socketRef.current.onerror = (error) => {
-                console.log('Error while registering socket', error);
-            }
         }
 
+        setUpWebSocket();
         return () => {
             if (socketRef?.current) {
                 socketRef.current.close();
             }
         }
     }, [isSignedIn])
+
+
+    const handleMessageEvents = (event: WebSocketMessageType) => {
+        setCurrentRoom((prev) => ({
+            ...prev,
+            ...event.data,
+        }))
+
+        switch (event.event) {
+            case WebSocketEventType.JOIN_ROOM: {
+                showSuccess(event.message);
+                break;
+            }
+
+            case WebSocketEventType.ADD_TO_QUEUE: {
+                showSuccess(event.message);
+                break;
+            }
+
+            case WebSocketEventType.PLAY_NEXT_IN_QUEUE: {
+                showSuccess(event.message);
+                break;
+            }
+        }
+    }
 
     const isReadyState = (): Boolean => {
         return (
@@ -52,20 +96,51 @@ export const useSocketConnection = (
                     }
                 }
                 socketRef.current?.send(JSON.stringify(joinRoomPayload));
-            } else {
-
             }
         } catch (error) {
-            console.log('Error Joining room');
-            console.log(error);
+            showError('Error Joining room');
         }
     }
 
+    const addToQueue = (track: Track) => {
+        try {
+            if (isReadyState()) {
+                const payload = {
+                    event: WebSocketEventType.ADD_TO_QUEUE,
+                    data: {
+                        track,
+                    }
+                }
+                socketRef?.current?.send(JSON.stringify(payload));
+            }
+        } catch (error) {
+            showError('Error Adding Song to Queue!')
+        }
+    }
 
+    const playNextInQueue = () => {
+        try {
+            if (isReadyState()) {
+                const payload = {
+                    event: WebSocketEventType.PLAY_NEXT_IN_QUEUE,
+                    data: {}
+                }
+                socketRef?.current?.send(JSON.stringify(payload));
+            }
+        } catch (error) {
+            showError('Error Playing Next Song in Queue!')
+        }
+    }
     return {
-        socketRef,
+        videoUrl,
+        setVideoUrl,
         loading,
+        currentRoom,
+        setCurrentRoom,
+        socketRef,
         joinRoom,
+        addToQueue,
+        playNextInQueue,
     }
 
 }

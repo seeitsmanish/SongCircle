@@ -9,7 +9,7 @@ type RequestMethods = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 export const RequestBuilder = async (url: string, method: RequestMethods | 'GET' = 'GET', body: Record<string, string> | null = null) => {
 
     const headers = new Headers({
-        // 'Content-Type': 'application/json',
+        'Content-Type': 'application/json',
     })
     const clerk = window?.Clerk;
     const token = clerk ? await clerk.session.getToken() : null;
