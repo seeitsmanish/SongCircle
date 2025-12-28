@@ -13,19 +13,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id     String  @id
-  name   String
-  email  String  @unique
-  roomId String?
-  rooms  Room[]
-}
-
 model Room {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  createdBy String
-  admin     User     @relation(fields: [createdBy], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  name        String   @unique
+  clerkUserId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
