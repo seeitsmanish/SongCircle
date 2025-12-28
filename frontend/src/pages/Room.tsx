@@ -155,7 +155,7 @@ const Room = () => {
                   {currentRoom.currentTrack ? (
                     <>
                       <ReactPlayer
-                        key={currentRoom.currentTrack.id}
+                        // key={currentRoom.currentTrack.id}
                         url={currentRoom.currentTrack.url}
                         width="100%"
                         height="100%"
