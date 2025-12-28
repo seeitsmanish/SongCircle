@@ -64,7 +64,7 @@ export function CreateRoomForm() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    name: newRoomName.trim(),
+                    name: newRoomName?.trim()?.toLowerCase(),
                     userId: user.id
                 })
             });
@@ -75,7 +75,8 @@ export function CreateRoomForm() {
             }
 
             setNewRoomName('');
-            navigate(`/room/${response.roomId}`);
+            console.log('Room created successfully:', response);
+            navigate(`/room/${newRoomName?.trim()?.toLowerCase()}`);
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to create room');
             console.error('Error creating room:', error);

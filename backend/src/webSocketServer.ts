@@ -5,11 +5,11 @@ import roomService from "./services/roomService";
 import { socketStore } from "./store/socketStore";
 import { logger } from "./utils/logger";
 import { userService } from "./services/UserService";
-import { User } from "@clerk/express";
 export interface RoomWebSocket extends WebSocket {
     room: string;
     token: string;
     userId: string;
+    name: string;
     isAdmin: boolean;
 }
 
@@ -45,11 +45,14 @@ export const setUpWebSocketServer = (httpServer: Server) => {
         }
 
         const userId = await userService.verifyUserByClerkToken(token);
+        const user = await userService.getUserByClerkUserId(userId as string);
+
 
         wss.handleUpgrade(request, socket, head, (ws: WebSocket) => {
-            (ws as RoomWebSocket).room = roomName;
+            (ws as RoomWebSocket).room = roomName?.toLowerCase();
             (ws as RoomWebSocket).token = token;
             (ws as RoomWebSocket).userId = userId;
+            (ws as RoomWebSocket).name = user?.name || 'Unknown';
             logger.info({ roomName, hasToken: !!token }, 'WebSocket upgrade successful');
             wss.emit('connection', ws, request);
         })
@@ -86,7 +89,10 @@ export const setUpWebSocketServer = (httpServer: Server) => {
                         // TODO: Validation
                         const userId = socketInstance.userId;
                         const track = jsonData?.data.track;
-                        const response = await roomService.addSongToQueue(roomName, userId, track);
+                        const response = await roomService.addSongToQueue(roomName, userId, {
+                            ...track,
+                            addedBy: socketInstance.name,
+                        });
                         socketStore.broadcast(roomName, {
                             ...response,
                             event: WebSocketEventType.ADD_TO_QUEUE,

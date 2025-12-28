@@ -47,7 +47,7 @@ class SocketStore {
     broadcast(roomName: string, payload: any, excludeIds: string[] = []) {
         try {
             const roomSet = this.rooms.get(roomName)
-            logger.info({ roomName, payload }, 'Broadcasting message to room');
+            logger.info({ roomName }, 'Broadcasting message to room');
             for (const ws of roomSet || []) {
                 if (excludeIds.includes(ws.userId)) {
                     logger.info({ roomName, userId: ws.userId }, 'Excluding user from broadcast');
@@ -70,13 +70,3 @@ class SocketStore {
 }
 
 export const socketStore = new SocketStore();
-
-setInterval(() => {
-    console.log("\n\n\n\Current Rooms in SocketStore:");
-    const room = socketStore.getRoom('manish-car')
-    if (room) {
-        room?.forEach((ws) => {
-            console.log(`UserId: ${ws.userId}, isAdmin: ${ws.isAdmin}`);
-        })
-    }
-}, 3000)

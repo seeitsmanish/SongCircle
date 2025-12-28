@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { RoomState, Track, WebSocketEventType, WebSocketMessageType } from '../types';
 import { useAuth } from "@clerk/clerk-react";
 import useSnackbar from "./useSnackbar";
+import { v4 as uuidv4 } from 'uuid';
 
 
 
@@ -145,7 +146,10 @@ export const useSocketConnection = (
                 const payload = {
                     event: WebSocketEventType.ADD_TO_QUEUE,
                     data: {
-                        track,
+                        track: {
+                            ...track,
+                            id: uuidv4(),
+                        },
                     }
                 }
                 socketRef?.current?.send(JSON.stringify(payload));

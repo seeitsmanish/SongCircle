@@ -1,14 +1,20 @@
 import express from "express";
 import { PORT } from "./config/serverConfig";
 const app = express();
-import authRoutes from './auth';
 import apiRoutes from "./api";
 import cors from "cors";
 import morgan from "morgan";
 import { clerkMiddleware } from "@clerk/express";
 import { logger } from "./utils/logger";
 import { setUpWebSocketServer } from "./webSocketServer";
+import { rateLimit } from "express-rate-limit";
 
+const limiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 100, // limit each IP to 100 requests per windowMs
+});
+
+app.use(limiter);
 // Morgan logs HTTP requests to Pino
 app.use(
     morgan(
@@ -28,7 +34,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(clerkMiddleware())
 
 
-app.use('/auth', authRoutes)
 app.use('/api', apiRoutes)
 const server = app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);

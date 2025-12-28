@@ -30,6 +30,7 @@ export type Track = {
   duration: string;
   platform: string;
   url: string;
+  addedBy: string;
 }
 
 export type RoomState = {

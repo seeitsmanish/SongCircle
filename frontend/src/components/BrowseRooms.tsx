@@ -30,10 +30,6 @@ export function BrowseRooms() {
         try {
             const data = await RequestBuilder(`${VITE_BACKEND_URL}/api/rooms?per_page=${perPage}&page=${page}&search=${debouncedSearchQuery}`);
 
-            // if (!data.ok) {
-            //     throw new Error(data.error || 'Failed to fetch rooms');
-            // }
-
             setRooms(data.rooms || []);
         } catch (error) {
             console.error('Failed to fetch rooms:', error);

@@ -1,4 +1,3 @@
-import { PrismaClient, User } from "@prisma/client";
 import { redis } from "../config/redis";
 import prisma from "../lib/prisma";
 import { logger } from '../utils/logger';
@@ -8,12 +7,12 @@ import { RoomWebSocket } from "../webSocketServer";
 
 class RoomService {
 
-    async createRoom(roomName: string, createdBy: string) {
+    async createRoom(roomName: string, clerkUserId: string) {
         try {
             await prisma.room.create({
                 data: {
                     name: roomName,
-                    createdBy: createdBy
+                    clerkUserId: clerkUserId
                 }
             })
         } catch (error) {
@@ -29,13 +28,13 @@ class RoomService {
             const totalRooms = await prisma.room.count({
                 where: {
                     ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
-                    ...(forUser ? { createdBy: userId } : {})
+                    ...(forUser ? { clerkUserId: userId } : {})
                 }
             });
             const rooms = await prisma.room.findMany({
                 where: {
                     ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
-                    ...(forUser ? { createdBy: userId } : {})
+                    ...(forUser ? { clerkUserId: userId } : {})
                 },
                 skip: (page > 0 && perPage > 0) ? ((page - 1) * perPage) : 0,
                 take: perPage,
@@ -85,14 +84,15 @@ class RoomService {
             const room = await prisma.room.findFirst({
                 where: {
                     name: {
-                        contains: roomName
+                        contains: roomName,
+                        mode: 'insensitive'
                     },
                 }
             })
             if (!room) {
                 throw new Error('No room found!');
             }
-            return room.createdBy;
+            return room.clerkUserId;
         }
         catch (error) {
             logger.error(`Something went wrong in RoomService.isAdmin, ${error}`);
@@ -259,10 +259,9 @@ class RoomService {
                 users,
                 currentTrack: JSON.parse(currentTrack),
             }
-            console.log('Room State:', roomState);
             return roomState;
         } catch (error) {
-            console.log(`Something went wrong while getRoomState: ${error}`);
+            logger.info(`Something went wrong while getRoomState: ${error}`);
         }
     }
 

@@ -36,7 +36,7 @@ export class YoutubeProvider implements MediaProvider {
             const details = response.items[0].contentDetails;
 
             return {
-                id: id,
+                trackId: id,
                 title: snippet?.title,
                 artist: snippet?.channelTitle,
                 thumbnail: snippet?.thumbnails?.medium?.url,

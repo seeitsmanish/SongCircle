@@ -27,9 +27,12 @@ export const RequestBuilder = async (url: string, method: RequestMethods | 'GET'
 
     try {
         const response = await fetch(url, options);
+        if (!response.ok && response.status === 429) {
+            throw new Error('Too many requests. Please try again later.');
+        }
         const data = await response.json();
         return data;
     } catch (error) {
-        throw new Error('Request failed');
+        throw error;
     }
 }

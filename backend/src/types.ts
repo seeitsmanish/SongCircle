@@ -8,12 +8,14 @@ export enum WebSocketEventType {
 
 export type RoomQueue = {
     id: string;
+    trackId: string;
     title: string;
     thumbnail: string;
     artist: string;
     duration: string;
     platform: string;
     url?: string;
+    addedBy: string;
 }
 
 export type RoomState = {

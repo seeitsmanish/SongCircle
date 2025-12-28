@@ -13,10 +13,19 @@ class UserService {
         }
     }
 
-    async getUserByUserId(userId: string) {
+    async getUserByClerkUserId(clerkUserId: string) {
         try {
-            const user = await clerkClient.users.getUser(userId);
-            return user;
+            const user = await clerkClient.users.getUser(clerkUserId);
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            const formattedUser = {
+                id: user.id,
+                name: (user.firstName || '') + " " + (user.lastName || ''),
+                email: user.emailAddresses && user.emailAddresses.length > 0 ? user.emailAddresses[0].emailAddress : '',
+            }
+            return formattedUser;
         } catch (error) {
             throw new Error('Unable to fetch user');
         }

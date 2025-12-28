@@ -1,7 +1,7 @@
 import { MediaProviderTypes } from "./MediaProvider";
 
 export type MediaMetadata = {
-    id: string;
+    trackId: string;
     title: string;
     artist: string;
     thumbnail: string;
