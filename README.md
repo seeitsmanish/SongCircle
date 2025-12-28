@@ -8,10 +8,8 @@ SongCircle is a real-time collaborative music platform where users can create or
 
 - Create or join music rooms.
 - Add YouTube Music links to the queue.
-- Vote songs up or down to change their position in the queue.
-- Auto-play the next song based on queue priority (votes and time added).
+- Auto-play the next song based on queue priority (time added for now).
 - Real-time updates for all users in a room using WebSocket.
-- Collaborative playlist control.
 
 ---
 
