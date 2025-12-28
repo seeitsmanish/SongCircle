@@ -31,9 +31,16 @@ const Room = () => {
   const { showError } = useSnackbar();
   const [loadingAddToQueue, setLoadingAddToQueue] = useState(false);
 
+  function formatNameForTitle(name: string) {
+    return name.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+  }
+
   useEffect(() => {
     if (!name) {
       navigate('/');
+    } else {
+      const title = formatNameForTitle(name);
+      document.title = `${title} - SongCircle`;
     }
   }, [name, navigate])
 
