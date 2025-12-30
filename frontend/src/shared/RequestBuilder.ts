@@ -1,38 +1,43 @@
+import axios, { AxiosRequestConfig } from "axios";
+
 declare global {
     interface Window {
         Clerk?: any;
     }
 }
 
-type RequestMethods = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+type RequestMethods = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
-export const RequestBuilder = async (url: string, method: RequestMethods | 'GET' = 'GET', body: Record<string, string> | null = null) => {
-
-    const headers = new Headers({
-        'Content-Type': 'application/json',
-    })
+export const RequestBuilder = async (
+    url: string,
+    method: RequestMethods = "GET",
+    body: Record<string, any> | null = null
+) => {
     const clerk = window?.Clerk;
     const token = clerk ? await clerk.session.getToken() : null;
-    if (token) {
-        headers.append('Authorization', `Bearer ${token}`);
-    }
-    const options: RequestInit = {
+
+    const config: AxiosRequestConfig = {
+        url,
         method,
-        headers,
+        headers: {
+            "Content-Type": "application/json",
+        },
+    };
+
+    if (token) {
+        config.headers!["Authorization"] = `Bearer ${token}`;
     }
 
-    if (method !== 'GET' && body) {
-        options.body = JSON.stringify(body);
+    if (method !== "GET" && body) {
+        config.data = body;
     }
 
     try {
-        const response = await fetch(url, options);
-        if (!response.ok && response.status === 429) {
-            throw new Error('Too many requests. Please try again later.');
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
+        const response = await axios(config);
+        console.log("Response Status:", response.status);
+        return response.data;
+    } catch (error: any) {
+        console.log(error);
         throw error;
     }
-}
+};
