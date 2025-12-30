@@ -22,12 +22,7 @@ export class MediaService {
             return data;
         } catch (error) {
             logger.error(`Something went wrong in MediaService.fetchMetaData: ${error}`);
-            // Todo: Implement Custom Error Handling
-            return {
-                success: false,
-                message: 'Something went wrong! Please try again later',
-                data: null
-            }
+            throw error;
         }
     }
 }

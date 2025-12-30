@@ -6,12 +6,13 @@ import { logger } from '../utils/logger';
 export class YoutubeProvider implements MediaProvider {
 
     validate(url: string): boolean {
-        return /^(https?:\/\/)?(www\.)?(youtube|youtu)(-nocookie)?(\.com|\.be)\//.test(url);
+        const ytRegex = new RegExp(YOUTUBE_URL_REGEX);
+        return ytRegex.test(url);
     }
 
     extractId(url: string): string {
-        // Extract video ID: either from ?v=ID or youtu.be/ID
-        const match = url.match(/[?&]v=([a-zA-Z0-9_-]{11})|youtu\.be\/([a-zA-Z0-9_-]{11})/);
+
+        const match = url.match(new RegExp(YOUTUBE_URL_REGEX));
         const id = match?.[1] || match?.[2];
         if (!id) throw new Error('No Video Found for this url!');
         return id;

@@ -53,11 +53,12 @@ const Room = () => {
   const fetchMetaData = async (url: string) => {
     try {
       const response = await RequestBuilder(`${VITE_BACKEND_URL}/api/metadata?url=${url}`);
-      console.log('Metadata response:', response);
+      if (!response.ok) {
+        throw new Error(response?.message || 'Failed to fetch details of video. Please try again.');
+      }
       return response;
     } catch (error) {
       console.log('Error fetching metadata:', error);
-      console.log(error);
       throw error;
     }
   }

@@ -141,7 +141,7 @@ router.get("/metadata", limiter, requireAuth(), async (req, res) => {
         logger.error(`Something went wrong in route /metadata, ${error}`);
         res.status(500).json({
             success: false,
-            message: "Something went wrong, Please try again later!",
+            message: error instanceof Error ? error.message : "Something went wrong, Please try again later!",
             data: null,
         });
     }
