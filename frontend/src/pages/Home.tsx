@@ -1,11 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useClerk } from '@clerk/clerk-react';
 import { Music, ArrowRight, Users, Radio, Speaker } from 'lucide-react';
 
 export function Home() {
   const { isSignedIn } = useUser();
   const navigate = useNavigate();
+  const { openSignIn } = useClerk();
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -30,7 +31,7 @@ export function Home() {
               </button>
             ) : (
               <button
-                onClick={() => document.querySelector('button[type="button"]')?.click()}
+                onClick={() => openSignIn()}
                 className="bg-primary hover:bg-primary/80 px-8 py-3 rounded-full flex items-center gap-2 font-medium"
               >
                 Get Started <ArrowRight className="w-4 h-4" />

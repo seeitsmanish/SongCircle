@@ -3,12 +3,17 @@ import { Home } from './pages/Home';
 import { Rooms } from './pages/Rooms';
 import Room from './pages/Room';
 import { Navigation } from './components/Navigation';
+import NotFound from './pages/NotFound';
+import withProtectedRoute from './shared/ProtectedRoute';
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!clerkPubKey) {
   throw new Error('Missing Clerk Publishable Key');
 }
+
+const ProtectedRooms = withProtectedRoute(Rooms);
+const ProtectedRoom = withProtectedRoute(Room);
 
 function App() {
   return (
@@ -18,8 +23,9 @@ function App() {
         <main className="container mx-auto px-4 py-8">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/rooms" element={<Rooms />} />
-            <Route path="/room/:name" element={<Room />} />
+            <Route path="/rooms" element={<ProtectedRooms />} />
+            <Route path="/room/:name" element={<ProtectedRoom />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
       </div>
