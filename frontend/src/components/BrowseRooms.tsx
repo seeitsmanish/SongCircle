@@ -4,6 +4,7 @@ import { Search, Disc2, ArrowRight, Users, X } from 'lucide-react';
 import { useUser } from '@clerk/clerk-react';
 import type { Room } from '../types';
 import { RequestBuilder } from '../shared/RequestBuilder';
+import { AxiosError } from 'axios';
 const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ROOMS_PER_PAGE = 5;
@@ -32,8 +33,11 @@ export function BrowseRooms() {
 
             setRooms(data.rooms || []);
         } catch (error) {
-            console.error('Failed to fetch rooms:', error);
-            setError('Failed to fetch rooms');
+            if (error instanceof AxiosError) {
+                setError(error.response?.data.message || 'Failed to fetch rooms');
+            } else {
+                setError('Failed to fetch rooms');
+            }
         } finally {
             setLoading(false);
         }

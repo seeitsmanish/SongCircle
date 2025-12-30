@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Plus, ArrowRight, Check, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useUser } from '@clerk/clerk-react';
+import { RequestBuilder } from '../shared/RequestBuilder';
+import { AxiosError } from 'axios';
 
 const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -56,30 +58,18 @@ export function CreateRoomForm() {
         setError(null);
 
         try {
-            const token = await getToken();
-            const res = await fetch(`${VITE_BACKEND_URL}/api/create-room`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
+            await RequestBuilder(`${VITE_BACKEND_URL}/api/create-room`,
+                'POST',
+                {
                     name: newRoomName?.trim()?.toLowerCase(),
                     userId: user.id
-                })
-            });
-
-            const response = await res.json();
-            if (!res.ok) {
-                throw new Error(response?.message || 'Failed to create room');
-            }
+                }
+            );
 
             setNewRoomName('');
-            console.log('Room created successfully:', response);
             navigate(`/room/${newRoomName?.trim()?.toLowerCase()}`);
         } catch (error) {
-            setError(error instanceof Error ? error.message : 'Failed to create room');
-            console.error('Error creating room:', error);
+            setError(error instanceof AxiosError ? error.response?.data.message : 'Failed to create room');
         } finally {
             setIsSubmitting(false);
         }
@@ -96,7 +86,7 @@ export function CreateRoomForm() {
                     <input
                         type="text"
                         value={newRoomName}
-                        onChange={(e) => setNewRoomName(e.target.value)}
+                        onChange={(e) => { setNewRoomName(e.target.value); setError(null); }}
                         placeholder="Enter room name..."
                         className="w-full p-4 bg-background/60 border border-primary/20 rounded-lg focus:border-primary/50 focus:outline-none transition-colors"
                     />

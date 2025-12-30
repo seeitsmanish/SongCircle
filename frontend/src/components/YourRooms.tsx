@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Disc2, ArrowRight, ChevronLeft, ChevronRight, Filter, X, Users } from 'lucide-react';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useUser } from '@clerk/clerk-react';
 import type { Room } from '../types';
 import { RequestBuilder } from '../shared/RequestBuilder';
+import { AxiosError } from 'axios';
 const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ROOMS_PER_PAGE = 4;
@@ -40,8 +41,12 @@ export function YourRooms() {
             setRooms(data.rooms || []);
             setPagination(data.pagination);
         } catch (err) {
-            console.error('Failed to fetch user rooms:', err);
-            setError('Failed to fetch your rooms');
+            console.log(err);
+            if (err instanceof AxiosError) {
+                setError(err.response?.data.message || 'Failed to fetch your rooms');
+            } else {
+                setError('Failed to fetch your rooms');
+            }
         } finally {
             setLoading(false);
         }
