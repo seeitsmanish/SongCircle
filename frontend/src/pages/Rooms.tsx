@@ -45,7 +45,7 @@ export function Rooms() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8 h-full">
       <div className="mb-10">
         <h1 className="text-3xl md:text-4xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500">Music Rooms</h1>
         <p className="text-gray-400 text-lg">Create your own room or join existing ones to share music together</p>

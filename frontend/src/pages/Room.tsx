@@ -53,8 +53,8 @@ const Room = () => {
   const fetchMetaData = async (url: string) => {
     try {
       const response = await RequestBuilder(`${VITE_BACKEND_URL}/api/metadata?url=${url}`);
-      if (!response.ok) {
-        throw new Error(response?.message || 'Failed to fetch details of video. Please try again.');
+      if (!response?.success) {
+        throw new Error(response?.message || 'Failed to fetch metadata');
       }
       return response;
     } catch (error) {
@@ -81,7 +81,6 @@ const Room = () => {
       addToQueue(data);
       setVideoUrl('');
     } catch (error) {
-      console.log('Error in handleAddToQueue:', error);
       if (error instanceof Error)
         showError(error?.message);
       else showError('An unexpected error occurred while adding to queue.');
@@ -109,7 +108,7 @@ const Room = () => {
           />
         )
       }
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto h-full">
         <button
           onClick={() => navigate('/')}
           className="flex items-center gap-2 mb-4 sm:mb-6 text-primary hover:text-primary/80 transition-colors duration-200 group"
@@ -118,7 +117,7 @@ const Room = () => {
           <span className="font-semibold text-sm sm:text-base">Back</span>
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 h-full">
           <div className="lg:col-span-2 space-y-4 sm:space-y-5 md:space-y-6">
             <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background/30 backdrop-blur-md border border-primary/20 p-4 sm:p-5 md:p-8 rounded-lg sm:rounded-xl shadow-lg">
               <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">

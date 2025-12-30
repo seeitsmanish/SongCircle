@@ -18,9 +18,9 @@ const ProtectedRoom = withProtectedRoute(Room);
 function App() {
   return (
     <Router>
-      <div className="text-white min-h-screen bg-background bg-gradient-radial from-background via-background to-primary/20">
+      <div className="text-white min-h-dvh bg-background bg-gradient-radial from-background via-background to-primary/20 flex flex-col">
         <Navigation />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8 flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/rooms" element={<ProtectedRooms />} />

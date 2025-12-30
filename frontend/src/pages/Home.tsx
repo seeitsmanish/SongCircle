@@ -9,7 +9,7 @@ export function Home() {
   const { openSignIn } = useClerk();
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto h-full">
       {/* Hero Section */}
       <div className="text-center mb-24 pt-16">
         <div className="relative">
