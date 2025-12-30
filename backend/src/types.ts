@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ROOM_NAME_REGEX } from "./constants";
+import { validateSearchInput, validateAndSanitizeUrl } from "./utils/inputsanitizer";
 
 export enum WebSocketEventType {
     JOIN_ROOM = 'JOIN_ROOM',
@@ -53,7 +54,18 @@ export const roomQuerySchema = z.object({
         .min(1, { error: "page should be greater than or equal to 1" })
         .optional(),
     search: z.string()
-        .max(30, { error: "search should be at most 30 characters" })
+        .max(30)
+        .refine(
+            (val) => {
+                try {
+                    validateSearchInput(val);
+                    return true;
+                } catch (error) {
+                    throw new Error((error as Error).message);
+                }
+            },
+            'Invalid search input'
+        )
         .optional(),
     for_user: z.coerce.boolean().optional(),
 });
@@ -72,7 +84,19 @@ export const roomQueueSchema = z.object({
     artist: z.string({ message: "artist is required" }),
     duration: z.number({ message: "duration is required" }),
     platform: z.string({ message: "platform is required" }),
-    url: z.string().optional(),
+    url: z.string()
+        .refine(
+            (url) => {
+                try {
+                    validateAndSanitizeUrl(url);
+                    return true;
+                } catch (error) {
+                    throw new Error((error as Error).message);
+                }
+            },
+            'Invalid or malicious URL'
+        )
+        .optional(),
 }).strict();
 
 

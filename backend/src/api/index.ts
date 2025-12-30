@@ -11,6 +11,13 @@ const router = Router();
 const roomCreationLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 5,
+    handler: (req, res) => {
+        res.status(429).json({
+            success: false,
+            message: "Too many requests, please try again later.",
+            data: null,
+        });
+    }
 });
 
 router.post(
@@ -72,10 +79,11 @@ router.get(
             const result = roomQuerySchema.safeParse(req.query);
 
             if (!result.success) {
+                logger.warn(`Suspicious search attempt by ${userId}: ${JSON.stringify(req.query)}`);
                 const errorMessages = result.error.issues.map((issue) => issue.message).join(", ");
                 res.status(400).json({
                     success: false,
-                    messaeg: errorMessages,
+                    message: errorMessages,
                     data: null,
                 });
                 return;

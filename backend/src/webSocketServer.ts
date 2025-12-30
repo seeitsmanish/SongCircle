@@ -1,6 +1,7 @@
 import { Server } from "http";
 import WebSocket, { WebSocketServer } from "ws";
 import { roomSchema, WebSocketEventType, joinRoomSchema, addToQueueSchema, playNextInQueueSchema } from "./types";
+import { MaliciousInputError } from "./utils/inputsanitizer";
 import roomService from "./services/roomService";
 import { socketStore } from "./store/socketStore";
 import { logger } from "./utils/logger";
@@ -97,10 +98,10 @@ export const setUpWebSocketServer = (httpServer: Server) => {
                     }
 
                     case WebSocketEventType.ADD_TO_QUEUE: {
-                        const { success, data, error } = addToQueueSchema.safeParse(jsonData);
-                        if (!success) {
-                            const errorMessages = error.issues.map(issue => issue.message).join(", ");
-                            logger.warn({ data }, 'Add to queue validation failed');
+                        const validation = addToQueueSchema.safeParse(jsonData);
+                        if (!validation.success) {
+                            const errorMessages = validation.error.issues.map(issue => issue.message).join(", ");
+                            logger.warn(`Invalid track data from user ${socketInstance.userId}: ${errorMessages}`);
                             socketInstance.send(JSON.stringify({
                                 success: false,
                                 message: errorMessages,
@@ -109,7 +110,7 @@ export const setUpWebSocketServer = (httpServer: Server) => {
                             return;
                         }
                         const userId = socketInstance.userId;
-                        const track = data.data.track;
+                        const track = validation.data.data.track;
                         const response = await roomService.addSongToQueue(roomName, userId, {
                             ...track,
                             addedBy: socketInstance.name,
@@ -141,6 +142,15 @@ export const setUpWebSocketServer = (httpServer: Server) => {
                     }
                 }
             } catch (error) {
+                if (error instanceof MaliciousInputError) {
+                    logger.warn(`Malicious input detected from ${socketInstance.userId}: ${error.message}`);
+                    socketInstance.send(JSON.stringify({
+                        success: false,
+                        message: error.message,
+                        data: null,
+                    }))
+                    return;
+                }
                 logger.error(`Error while handling WebSocket message: ${error}`);
                 socketInstance.send(JSON.stringify({
                     success: false,
