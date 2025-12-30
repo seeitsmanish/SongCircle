@@ -4,19 +4,27 @@ import { logger } from '../utils/logger';
 import { RoomQueue, WebSocketEventType } from '../types';
 import { socketStore } from "../store/socketStore";
 import { RoomWebSocket } from "../webSocketServer";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 class RoomService {
 
     async createRoom(roomName: string, clerkUserId: string) {
         try {
+            const existingRoom = await prisma.room.findUnique({
+                where: { name: roomName }
+            })
+            if (existingRoom) {
+                throw new Error('Room name already exists');
+            }
             await prisma.room.create({
                 data: {
                     name: roomName,
                     clerkUserId: clerkUserId
                 }
-            })
+            });
         } catch (error) {
             logger.error(`Error creating room: ${error}`);
+            throw error;
         }
     }
 

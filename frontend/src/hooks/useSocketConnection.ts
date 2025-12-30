@@ -87,6 +87,10 @@ export const useSocketConnection = (
     }
 
     const handleMessageEvents = (event: WebSocketMessageType) => {
+        if (!event.success) {
+            showError(event.message);
+            return;
+        }
         setCurrentRoom((prev) => ({
             ...prev,
             ...event.data,
@@ -129,9 +133,7 @@ export const useSocketConnection = (
             if (isReadyState()) {
                 const joinRoomPayload = {
                     event: WebSocketEventType.JOIN_ROOM,
-                    data: {
-                        userId: userId,
-                    }
+                    data: {},
                 }
                 socketRef.current?.send(JSON.stringify(joinRoomPayload));
             }

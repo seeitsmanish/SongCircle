@@ -1,6 +1,6 @@
 import { Server } from "http";
 import WebSocket, { WebSocketServer } from "ws";
-import { WebSocketEventType } from "./types";
+import { roomSchema, WebSocketEventType, joinRoomSchema, addToQueueSchema, playNextInQueueSchema } from "./types";
 import roomService from "./services/roomService";
 import { socketStore } from "./store/socketStore";
 import { logger } from "./utils/logger";
@@ -26,13 +26,15 @@ export const setUpWebSocketServer = (httpServer: Server) => {
             return;
         }
 
-        let roomName = match[1];
-
-        try {
-            roomName = decodeURIComponent(roomName);
-        } catch {
+        let roomName = decodeURIComponent(match[1]);
+        // added room name validation here
+        const { success, data } = roomSchema.safeParse({ name: roomName });
+        if (!success) {
+            logger.warn({ roomName }, 'WebSocket connection attempt with invalid room name');
             socket.destroy();
             return;
+        } else {
+            roomName = data.name;
         }
 
         const queryMatch = url?.match(/[?&]token=([^&]+)/);
@@ -60,6 +62,7 @@ export const setUpWebSocketServer = (httpServer: Server) => {
 
     wss.on('connection', (socketInstance: RoomWebSocket, request) => {
         const roomName = socketInstance.room as string;
+
         socketInstance.on('message', async (data: any) => {
             try {
                 const parsedData = Buffer.isBuffer(data) ? data.toString('utf8') : String(data);
@@ -75,7 +78,15 @@ export const setUpWebSocketServer = (httpServer: Server) => {
                 switch (jsonData.event) {
 
                     case WebSocketEventType.JOIN_ROOM: {
-                        // TODO: Validation
+                        const validation = joinRoomSchema.safeParse(jsonData);
+                        if (!validation.success) {
+                            socketInstance.send(JSON.stringify({
+                                success: false,
+                                message: 'Invalid request format',
+                                data: null,
+                            }))
+                            return;
+                        }
                         const userId = socketInstance.userId;
                         const response = await roomService.joinRoom(roomName, userId, socketInstance);
                         socketInstance.send(JSON.stringify({
@@ -86,9 +97,19 @@ export const setUpWebSocketServer = (httpServer: Server) => {
                     }
 
                     case WebSocketEventType.ADD_TO_QUEUE: {
-                        // TODO: Validation
+                        const { success, data, error } = addToQueueSchema.safeParse(jsonData);
+                        if (!success) {
+                            const errorMessages = error.issues.map(issue => issue.message).join(", ");
+                            logger.warn({ data }, 'Add to queue validation failed');
+                            socketInstance.send(JSON.stringify({
+                                success: false,
+                                message: errorMessages,
+                                data: null,
+                            }))
+                            return;
+                        }
                         const userId = socketInstance.userId;
-                        const track = jsonData?.data.track;
+                        const track = data.data.track;
                         const response = await roomService.addSongToQueue(roomName, userId, {
                             ...track,
                             addedBy: socketInstance.name,
@@ -101,6 +122,15 @@ export const setUpWebSocketServer = (httpServer: Server) => {
                     }
 
                     case WebSocketEventType.PLAY_NEXT_IN_QUEUE: {
+                        const validation = playNextInQueueSchema.safeParse(jsonData);
+                        if (!validation.success) {
+                            socketInstance.send(JSON.stringify({
+                                success: false,
+                                message: 'Invalid request format',
+                                data: null,
+                            }))
+                            return;
+                        }
                         const userId = socketInstance.userId;
                         const response = await roomService.playNextInQueue(roomName, userId);
                         socketStore.broadcast(roomName, {

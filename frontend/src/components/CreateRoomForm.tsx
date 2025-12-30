@@ -71,7 +71,7 @@ export function CreateRoomForm() {
 
             const response = await res.json();
             if (!res.ok) {
-                throw new Error(response.error || 'Failed to create room');
+                throw new Error(response?.message || 'Failed to create room');
             }
 
             setNewRoomName('');
