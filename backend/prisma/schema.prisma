@@ -15,7 +15,7 @@ datasource db {
 
 model Room {
   id          String   @id @default(uuid())
-  name        String   @unique
+  name        String   @unique @db.VarChar(30)
   clerkUserId String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
