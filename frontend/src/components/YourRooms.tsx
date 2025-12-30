@@ -41,7 +41,6 @@ export function YourRooms() {
             setRooms(data.rooms || []);
             setPagination(data.pagination);
         } catch (err) {
-            console.log(err);
             if (err instanceof AxiosError) {
                 setError(err.response?.data.message || 'Failed to fetch your rooms');
             } else {

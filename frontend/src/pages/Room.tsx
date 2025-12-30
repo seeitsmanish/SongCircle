@@ -58,7 +58,6 @@ const Room = () => {
       }
       return response;
     } catch (error) {
-      console.log('Error fetching metadata:', error);
       throw error;
     }
   }

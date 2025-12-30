@@ -34,10 +34,8 @@ export const RequestBuilder = async (
 
     try {
         const response = await axios(config);
-        console.log("Response Status:", response.status);
         return response.data;
     } catch (error: any) {
-        console.log(error);
         throw error;
     }
 };

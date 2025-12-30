@@ -45,18 +45,15 @@ export const useSocketConnection = (
         if (isSignedIn && !socketRef.current) {
             socketRef.current = new WebSocket(`${url}?token=${token}`);
             socketRef.current.onopen = () => {
-                console.log('Socket connection created');
                 setLoading(false);
             }
 
             socketRef.current.onmessage = (event) => {
-                console.log('Message recieved', JSON.parse(event.data));
                 const eventData = JSON.parse(event.data);
                 handleMessageEvents(eventData);
             }
 
             socketRef.current.onerror = (error) => {
-                console.log('Error while registering socket', error);
                 setRetryModalState({
                     show: true,
                     loading: false,
@@ -64,7 +61,6 @@ export const useSocketConnection = (
             }
 
             socketRef.current.onclose = () => {
-                console.log('Socket connection closed');
                 setRetryModalState({
                     show: true,
                     loading: false,
