@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player/youtube';
-import { AlertTriangleIcon, Loader2, Plus, Music, ArrowLeft } from 'lucide-react';
+import { AlertTriangleIcon, Loader2, Plus, Music, ArrowLeft, SkipForward } from 'lucide-react';
 import LoadingAnimation from '../components/LoadingAnimation';
 import { useSocketConnection } from '../hooks/useSocketConnection';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -220,6 +220,16 @@ const Room = () => {
               <div className="h-1 w-6 sm:w-8 bg-gradient-to-r from-primary to-primary/50 rounded-full"></div>
               <h2 className="text-xl sm:text-2xl font-bold text-white">Queue</h2>
               <span className="ml-auto text-xs font-semibold text-primary/80 bg-primary/20 px-2 py-1 rounded-full">{currentRoom.queue.length}</span>
+              {currentRoom?.isAdmin && currentRoom.queue.length > 0 && (
+                <button
+                  onClick={() => playNextInQueue()}
+                  className="ml-2 bg-primary hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg flex items-center gap-1 font-semibold text-xs sm:text-sm transition-all duration-200"
+                  title="Skip to next song in queue"
+                >
+                  <SkipForward className="w-4 h-4" />
+                  <span className="hidden sm:inline">Next</span>
+                </button>
+              )}
             </div>
             {currentRoom.queue.length > 0 && currentRoom?.isAdminPresent ? (
               <div className="space-y-2 sm:space-y-3">
