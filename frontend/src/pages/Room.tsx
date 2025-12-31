@@ -7,6 +7,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useSnackbar from '../hooks/useSnackbar';
 import { RequestBuilder } from '../shared/RequestBuilder';
 import Modal from '../components/Modal';
+import { AxiosError } from 'axios';
 const VITE_SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export type RoomProps = {
@@ -53,9 +54,6 @@ const Room = () => {
   const fetchMetaData = async (url: string) => {
     try {
       const response = await RequestBuilder(`${VITE_BACKEND_URL}/api/metadata?url=${url}`);
-      if (!response?.success) {
-        throw new Error(response?.message || 'Failed to fetch metadata');
-      }
       return response;
     } catch (error) {
       throw error;
@@ -80,8 +78,8 @@ const Room = () => {
       addToQueue(data);
       setVideoUrl('');
     } catch (error) {
-      if (error instanceof Error)
-        showError(error?.message);
+      if (error instanceof AxiosError)
+        showError(error?.response?.data?.message || 'Failed to fetch video metadata.');
       else showError('An unexpected error occurred while adding to queue.');
     } finally {
       setLoadingAddToQueue(false);
@@ -158,33 +156,25 @@ const Room = () => {
 
               {currentRoom?.isAdmin && (
                 <div className="aspect-video bg-gradient-to-br from-black via-gray-900 to-black rounded-lg sm:rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10 mt-4 sm:mt-5 md:mt-6">
-                  {currentRoom.currentTrack ? (
-                    <>
-                      <ReactPlayer
-                        // key={currentRoom.currentTrack.id}
-                        url={currentRoom.currentTrack.url}
-                        width="100%"
-                        height="100%"
-                        controls={true}
-                        playing={true}
-                        onEnded={() => {
-                          playNextInQueue();
-                        }}
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 sm:p-3 text-xs sm:text-sm">
+                  <ReactPlayer
+                    url={currentRoom.currentTrack?.url || undefined}
+                    width={currentRoom.currentTrack ? "100%" : "0"}
+                    height={currentRoom.currentTrack ? "100%" : "0"}
+                    controls={true}
+                    playing={true}
+                    onEnded={() => {
+                      playNextInQueue();
+                    }}
+                  />
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5">
+                    <div className="text-center p-4">
+                      <div className="inline-flex items-center justify-center w-10 h-10 sm:w-14 md:w-20 md:h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full mb-1 sm:mb-2 md:mb-4">
+                        <Music className="w-5 sm:w-7 md:w-10 h-5 sm:h-7 md:h-10 text-primary/60" />
                       </div>
-                    </>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5">
-                      <div className="text-center p-4">
-                        <div className="inline-flex items-center justify-center w-10 h-10 sm:w-14 md:w-20 md:h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full mb-1 sm:mb-2 md:mb-4">
-                          <Music className="w-5 sm:w-7 md:w-10 h-5 sm:h-7 md:h-10 text-primary/60" />
-                        </div>
-                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-1 sm:mb-2">No track playing</h3>
-                        <p className="text-xs sm:text-sm text-gray-400 max-w-xs">Waiting for the next song in the queue to start</p>
-                      </div>
+                      <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-1 sm:mb-2">No track playing</h3>
+                      <p className="text-xs sm:text-sm text-gray-400 max-w-xs">Waiting for the next song in the queue to start</p>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
